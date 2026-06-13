@@ -58,38 +58,6 @@ const BAD_ITEMS = [
 const canvas = document.getElementById('gameCanvas');
 const ctx    = canvas.getContext('2d');
 
-// ── Twemoji image renderer (no iOS built-in shadow) ───────────
-const TWEMOJI_CDN = 'https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/';
-const emojiCache  = {};
-
-function drawEmoji(emoji, cx, cy, size) {
-  let img = emojiCache[emoji];
-  if (!img) {
-    img = new Image();
-    img.crossOrigin = 'anonymous';
-    try { img.src = TWEMOJI_CDN + twemoji.convert.toCodePoint(emoji) + '.png'; } catch (_) { return; }
-    emojiCache[emoji] = img;
-  }
-  if (img.complete && img.naturalWidth > 0) {
-    ctx.drawImage(img, cx - size / 2, cy - size / 2, size, size);
-  }
-}
-
-function preloadEmoji() {
-  const all = [
-    ...GOOD_ITEMS.map(t => t.emoji).filter(Boolean),
-    ...BAD_ITEMS.map(t => t.emoji).filter(Boolean),
-    '💕', '❤️', '🔊', '🔇',
-  ];
-  all.forEach(emoji => {
-    if (emojiCache[emoji]) return;
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    try { img.src = TWEMOJI_CDN + twemoji.convert.toCodePoint(emoji) + '.png'; } catch (_) {}
-    emojiCache[emoji] = img;
-  });
-}
-
 // ── Resize ───────────────────────────────────────────────────
 function resize() {
   canvas.width  = window.innerWidth;
@@ -350,7 +318,10 @@ function drawBasket() {
   ctx.restore();
 
   // center icon
-  drawEmoji('💕', 0, 2, 26);
+  ctx.font         = '26px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",serif';
+  ctx.textAlign    = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('💕', 0, 2);
 
   ctx.restore();
 }
@@ -372,16 +343,21 @@ function drawItem(item) {
     ctx.textBaseline = 'middle';
     ctx.fillText(item.text, 0, 0);
   } else {
-    drawEmoji(item.emoji, 0, 0, 44);
+    ctx.font         = '44px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",serif';
+    ctx.textAlign    = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(item.emoji, 0, 0);
   }
   ctx.restore();
 }
 
 function drawUI() {
-  // Lives (top-left) — drawEmoji is centre-based; +15 offsets to match old top-left origin
+  // Lives (top-left)
+  ctx.textBaseline = 'top';
+  ctx.font         = '30px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",serif';
   for (let i = 0; i < 3; i++) {
     ctx.globalAlpha = i < lives ? 1 : 0.22;
-    drawEmoji('❤️', 16 + i * 40 + 15, 31, 30);
+    ctx.fillText('❤️', 16 + i * 40, 16);
   }
   ctx.globalAlpha = 1;
 
@@ -393,7 +369,10 @@ function drawUI() {
   ctx.fillText(score + ' ✨', canvas.width - 16, 16);
 
   // Sound toggle (bottom-right)
-  drawEmoji(soundOn ? '🔊' : '🔇', canvas.width - 36, canvas.height - 36, 28);
+  ctx.font         = '28px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",serif';
+  ctx.textAlign    = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(soundOn ? '🔊' : '🔇', canvas.width - 36, canvas.height - 36);
 }
 
 function drawBtn(label, r) {
@@ -412,7 +391,10 @@ function drawBtn(label, r) {
 }
 
 function drawSoundBtn() {
-  drawEmoji(soundOn ? '🔊' : '🔇', canvas.width - 36, canvas.height - 36, 28);
+  ctx.font         = '28px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",serif';
+  ctx.textAlign    = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(soundOn ? '🔊' : '🔇', canvas.width - 36, canvas.height - 36);
 }
 
 // ── Start screen ──────────────────────────────────────────────
@@ -429,12 +411,14 @@ function drawStartScreen(ts) {
     { fx: 0.20, fy: 0.90, ph: 0.3 },
     { fx: 0.80, fy: 0.85, ph: 1.8 },
   ];
+  ctx.font         = '34px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",serif';
+  ctx.textAlign    = 'center';
+  ctx.textBaseline = 'middle';
   hPos.forEach(h => {
     ctx.globalAlpha = 0.26;
-    drawEmoji('💕',
+    ctx.fillText('💕',
       h.fx * canvas.width,
-      h.fy * canvas.height + Math.sin(ts / 900 + h.ph) * 14,
-      34);
+      h.fy * canvas.height + Math.sin(ts / 900 + h.ph) * 14);
   });
   ctx.globalAlpha = 1;
 
@@ -655,5 +639,4 @@ function loop(ts) {
 basket.x       = canvas.width  / 2;
 basket.targetX = canvas.width  / 2;
 basket.y       = canvas.height - 70;
-preloadEmoji();
 requestAnimationFrame(loop);
