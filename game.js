@@ -18,6 +18,10 @@ const COMPLIMENTS = [
   'Iti multumesc ca existi 🌸',
   'Esti visul meu devenit realitate 💫',
   'Cea mai tare fata din lume 🌍',
+  // dedicate pentru Miriam
+  'Esti minunata, Miriam! 💕',
+  'Miriam, esti cel mai bun cadou din viata mea 🎁',
+  'Dumnezeu stie cat imi esti draga, Miriam 🌸',
   // versete biblice
   'Pot totul in Hristos - Filipeni 4:13 📖',
   'Bucurati-va totdeauna in Domnul - Filipeni 4:4 📖',
@@ -92,6 +96,8 @@ const basket = {
 const keys = {};
 
 window.addEventListener('keydown', e => {
+  // Unlock AudioContext on first keypress — required by Safari
+  try { getAC().resume(); } catch (_) {}
   keys[e.key] = true;
   if ((e.key === ' ' || e.key === 'Enter') && gameState !== 'playing') startGame();
   if (e.key.toLowerCase() === 'm') soundOn = !soundOn;
@@ -121,6 +127,9 @@ canvas.addEventListener('touchmove', e => {
 }, { passive: false });
 
 function handleTap(x, y) {
+  // Unlock AudioContext on first tap — required by Safari
+  try { getAC().resume(); } catch (_) {}
+
   // Sound toggle — bottom-right corner
   if (Math.hypot(x - (canvas.width - 36), y - (canvas.height - 36)) < 34) {
     soundOn = !soundOn;
@@ -144,18 +153,23 @@ function beep(f1, f2, dur, vol) {
   vol = vol || 0.25;
   if (!soundOn) return;
   try {
-    const ac  = getAC();
-    const osc = ac.createOscillator();
-    const g   = ac.createGain();
-    osc.connect(g);
-    g.connect(ac.destination);
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(f1, ac.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(f2, ac.currentTime + dur);
-    g.gain.setValueAtTime(vol, ac.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + dur);
-    osc.start();
-    osc.stop(ac.currentTime + dur);
+    const ac = getAC();
+    const play = () => {
+      const osc = ac.createOscillator();
+      const g   = ac.createGain();
+      osc.connect(g);
+      g.connect(ac.destination);
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(f1, ac.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(f2, ac.currentTime + dur);
+      g.gain.setValueAtTime(vol, ac.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + dur);
+      osc.start();
+      osc.stop(ac.currentTime + dur);
+    };
+    // Safari suspends AudioContext until a user gesture resumes it
+    if (ac.state === 'suspended') ac.resume().then(play);
+    else play();
   } catch (_) {}
 }
 
@@ -304,7 +318,7 @@ function drawBasket() {
   ctx.restore();
 
   // center icon
-  ctx.font         = '26px serif';
+  ctx.font         = '26px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",serif';
   ctx.textAlign    = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText('💕', 0, 2);
@@ -329,7 +343,7 @@ function drawItem(item) {
     ctx.textBaseline = 'middle';
     ctx.fillText(item.text, 0, 0);
   } else {
-    ctx.font         = '44px serif';
+    ctx.font         = '44px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",serif';
     ctx.textAlign    = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(item.emoji, 0, 0);
@@ -340,7 +354,7 @@ function drawItem(item) {
 function drawUI() {
   // Lives (top-left)
   ctx.textBaseline = 'top';
-  ctx.font         = '30px serif';
+  ctx.font         = '30px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",serif';
   for (let i = 0; i < 3; i++) {
     ctx.globalAlpha = i < lives ? 1 : 0.22;
     ctx.fillText('❤️', 16 + i * 40, 16);
@@ -355,7 +369,7 @@ function drawUI() {
   ctx.fillText(score + ' ✨', canvas.width - 16, 16);
 
   // Sound toggle (bottom-right)
-  ctx.font         = '28px serif';
+  ctx.font         = '28px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",serif';
   ctx.textAlign    = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText(soundOn ? '🔊' : '🔇', canvas.width - 36, canvas.height - 36);
@@ -377,7 +391,7 @@ function drawBtn(label, r) {
 }
 
 function drawSoundBtn() {
-  ctx.font         = '28px serif';
+  ctx.font         = '28px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",serif';
   ctx.textAlign    = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText(soundOn ? '🔊' : '🔇', canvas.width - 36, canvas.height - 36);
@@ -397,7 +411,7 @@ function drawStartScreen(ts) {
     { fx: 0.20, fy: 0.90, ph: 0.3 },
     { fx: 0.80, fy: 0.85, ph: 1.8 },
   ];
-  ctx.font         = '34px serif';
+  ctx.font         = '34px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",serif';
   ctx.textAlign    = 'center';
   ctx.textBaseline = 'middle';
   hPos.forEach(h => {
@@ -428,7 +442,7 @@ function drawStartScreen(ts) {
   // Subtitle
   ctx.font      = `${Math.min(20, canvas.width / 22)}px 'Fredoka One', cursive`;
   ctx.fillStyle = '#b36b9e';
-  ctx.fillText('Prinde iubirea din aer! 💨❤️', canvas.width / 2, canvas.height * 0.46);
+  ctx.fillText('Dedicat tie, Miriam! 💨❤️', canvas.width / 2, canvas.height * 0.46);
 
   drawBtn('Joaca 💕', startBtnRect());
 
@@ -444,10 +458,10 @@ function drawStartScreen(ts) {
 
 // ── Game over screen ──────────────────────────────────────────
 function getEndMsg() {
-  if (score <  25) return 'Hmm... mai practica putin, iubire! 😄';
-  if (score <  70) return 'Bravo! Ai prins cateva iubiri! 💪';
-  if (score < 130) return 'Wow, esti senzationala! 🌟';
-  return 'LEGENDA ABSOLUTA! Ce fata extraordinara! 🏆❤️';
+  if (score <  25) return 'Hmm... mai practica putin, Miriam! 😄';
+  if (score <  70) return 'Bravo, Miriam! Ai prins cateva iubiri! 💪';
+  if (score < 130) return 'Wow, Miriam, esti senzationala! 🌟';
+  return 'LEGENDA ABSOLUTA, Miriam! Ce fata extraordinara! 🏆❤️';
 }
 
 function drawGameOverScreen() {
